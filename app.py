@@ -7,7 +7,8 @@ from models import db, Client, Account, Report, ReportBalance
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'ef-report-portal-dev-key')
-db_path = os.environ.get('RAILWAY_VOLUME_MOUNT_PATH', os.path.join(app.instance_path, ''))
+db_path = os.environ.get('RAILWAY_VOLUME_MOUNT_PATH', app.instance_path)
+os.makedirs(db_path, exist_ok=True)
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get(
     'DATABASE_URL', f"sqlite:///{os.path.join(db_path, 'ef_portal.db')}"
 )
