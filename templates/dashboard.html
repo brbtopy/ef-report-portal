@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}Clients — EF Report Portal{% endblock %}
+
+{% block content %}
+<div class="flex items-center justify-between mb-8">
+    <div>
+        <h1 class="text-2xl font-bold text-gray-900">Client Dashboard</h1>
+        <p class="text-sm text-gray-500 mt-1">{{ clients|length }} client{{ 's' if clients|length != 1 }} on file</p>
+    </div>
+    <a href="{{ url_for('new_client') }}"
+       class="inline-flex items-center gap-2 bg-brand-500 hover:bg-brand-600 text-white px-5 py-2.5 rounded-lg text-sm font-semibold shadow transition">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg>
+        Add Client
+    </a>
+</div>
+
+{% if clients %}
+<div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+    {% for client in clients %}
+    <a href="{{ url_for('client_detail', client_id=client.id) }}"
+       class="group bg-white rounded-xl border border-gray-200 p-6 shadow-sm hover:shadow-md hover:border-brand-200 transition">
+        <div class="flex items-start justify-between">
+            <div>
+                <h2 class="text-lg font-semibold text-gray-900 group-hover:text-brand-500 transition">{{ client.name_1 }}</h2>
+                {% if client.is_married and client.name_2 %}
+                <p class="text-sm text-gray-500">&amp; {{ client.name_2 }}</p>
+                {% endif %}
+            </div>
+            <span class="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-700">
+                {{ client.accounts|length }} acct{{ 's' if client.accounts|length != 1 }}
+            </span>
+        </div>
+        <div class="mt-4 grid grid-cols-2 gap-3 text-sm">
+            <div>
+                <span class="text-gray-400 text-xs uppercase tracking-wide">Monthly Income</span>
+                <p class="font-semibold text-gray-800">{{ client.monthly_salary|currency }}</p>
+            </div>
+            <div>
+                <span class="text-gray-400 text-xs uppercase tracking-wide">Expense Budget</span>
+                <p class="font-semibold text-gray-800">{{ client.monthly_expense_budget|currency }}</p>
+            </div>
+        </div>
+        {% if client.last_report %}
+        <div class="mt-4 pt-3 border-t border-gray-100 flex items-center text-xs text-gray-400">
+            <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12h6m-3-3v6m-7 4h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+            Last report: {{ client.last_report.label }}
+        </div>
+        {% else %}
+        <div class="mt-4 pt-3 border-t border-gray-100 text-xs text-gray-400 italic">No reports yet</div>
+        {% endif %}
+    </a>
+    {% endfor %}
+</div>
+{% else %}
+<div class="text-center py-20">
+    <svg class="mx-auto h-12 w-12 text-gray-300" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z"/></svg>
+    <h3 class="mt-4 text-lg font-semibold text-gray-700">No clients yet</h3>
+    <p class="text-sm text-gray-500 mt-1 mb-6">Get started by adding your first client.</p>
+    <a href="{{ url_for('new_client') }}" class="inline-flex items-center gap-2 bg-brand-500 hover:bg-brand-600 text-white px-5 py-2.5 rounded-lg text-sm font-semibold shadow transition">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg>
+        Add Client
+    </a>
+</div>
+{% endif %}
+{% endblock %}

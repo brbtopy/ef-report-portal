@@ -1,0 +1,347 @@
+{% extends "base.html" %}
+{% block title %}Generate Report — {{ client.name_1 }} — EF Report Portal{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto">
+    <div class="mb-6">
+        <a href="{{ url_for('client_detail', client_id=client.id) }}" class="text-sm text-gray-500 hover:text-brand-500 transition">&larr; {{ client.name_1 }}</a>
+        <h1 class="text-2xl font-bold text-gray-900 mt-2">Generate Quarterly Report</h1>
+        <p class="text-sm text-gray-500 mt-1">Enter current balances. Static data is pre-filled from the client profile.</p>
+    </div>
+
+    <form method="POST" action="{{ url_for('create_report', client_id=client.id) }}" id="report-form"
+          class="space-y-6">
+
+        <!-- Report period -->
+        <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+            <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">Report Period</h2>
+            <div class="grid gap-4 sm:grid-cols-3">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Quarter *</label>
+                    <select name="quarter" required class="w-full rounded-lg border-gray-300 shadow-sm text-sm px-3 py-2 border">
+                        {% for q in quarters %}
+                        <option value="{{ q }}" {{ 'selected' if q == current_quarter }}>{{ q }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Year *</label>
+                    <input type="number" name="year" value="{{ current_year }}" required min="2020" max="2030"
+                           class="w-full rounded-lg border-gray-300 shadow-sm text-sm px-3 py-2 border">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Report Date</label>
+                    <input type="date" name="report_date" value="{{ today if today else '' }}"
+                           class="w-full rounded-lg border-gray-300 shadow-sm text-sm px-3 py-2 border">
+                </div>
+            </div>
+        </div>
+
+        <!-- SACS section -->
+        <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+            <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-1">SACS — Cash Flow</h2>
+            <p class="text-xs text-gray-400 mb-4">Monthly inflow and outflow from client profile. Enter current Private Reserve and Schwab balances.</p>
+
+            <div class="grid gap-4 sm:grid-cols-2 mb-4">
+                <div class="bg-emerald-50 rounded-lg p-4">
+                    <span class="text-xs font-semibold text-emerald-600 uppercase">Monthly Inflow</span>
+                    <p class="text-xl font-bold text-emerald-700 mt-1">{{ client.monthly_salary|currency }}</p>
+                    <span class="text-xs text-emerald-500">From client profile</span>
+                </div>
+                <div class="bg-red-50 rounded-lg p-4">
+                    <span class="text-xs font-semibold text-red-600 uppercase">Monthly Outflow</span>
+                    <p class="text-xl font-bold text-red-600 mt-1">{{ client.monthly_expense_budget|currency }}</p>
+                    <span class="text-xs text-red-400">From client profile</span>
+                </div>
+            </div>
+
+            <div class="bg-blue-50 rounded-lg p-4 mb-4">
+                <span class="text-xs font-semibold text-blue-600 uppercase">Excess to Private Reserve</span>
+                <p class="text-xl font-bold text-blue-700 mt-1" id="calc-excess">{{ client.excess_cashflow|currency }}</p>
+                <span class="text-xs text-blue-400">Auto-calculated: Inflow &minus; Outflow</span>
+            </div>
+
+            <div class="grid gap-4 sm:grid-cols-2">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Private Reserve Balance *</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400 text-sm">$</span>
+                        <input type="number" name="private_reserve_balance" step="0.01" min="0" required
+                               id="private_reserve_balance"
+                               placeholder="{{ previous_balances.get('pr', {}).get('balance', '') }}"
+                               class="w-full pl-7 rounded-lg border-gray-300 shadow-sm text-sm px-3 py-2 border focus:border-blue-500 focus:ring-blue-500">
+                    </div>
+                    {% if last_report and last_report.private_reserve_balance %}
+                    <p class="text-xs text-gray-400 mt-1">Last: {{ last_report.private_reserve_balance|currency }}</p>
+                    {% endif %}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Schwab Investment Balance</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400 text-sm">$</span>
+                        <input type="number" name="schwab_balance" step="0.01" min="0"
+                               id="schwab_balance"
+                               class="w-full pl-7 rounded-lg border-gray-300 shadow-sm text-sm px-3 py-2 border focus:border-blue-500 focus:ring-blue-500">
+                    </div>
+                    {% if last_report and last_report.schwab_balance %}
+                    <p class="text-xs text-gray-400 mt-1">Last: {{ last_report.schwab_balance|currency }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="bg-gray-50 rounded-lg p-4 mt-4">
+                <span class="text-xs font-semibold text-gray-500 uppercase">Private Reserve Target</span>
+                <p class="text-lg font-bold text-gray-700 mt-1">{{ client.private_reserve_target|currency }}</p>
+                <span class="text-xs text-gray-400">6 &times; monthly expenses + insurance deductibles</span>
+            </div>
+        </div>
+
+        <!-- TCC section: Retirement -->
+        {% set retirement_c1 = client.retirement_accounts('client_1') %}
+        {% set retirement_c2 = client.retirement_accounts('client_2') %}
+        {% set non_retirement = client.non_retirement_accounts() %}
+        {% set trusts = client.trust_accounts() %}
+        {% set liabilities = client.liability_accounts() %}
+
+        <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+            <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-1">TCC — Account Balances</h2>
+            <p class="text-xs text-gray-400 mb-4">Enter current balances for all accounts. Totals update automatically.</p>
+
+            {% if retirement_c1 %}
+            <div class="mb-6">
+                <h3 class="text-xs font-semibold text-emerald-600 uppercase tracking-wide mb-3">{{ client.name_1 }} — Retirement</h3>
+                <div class="space-y-3">
+                    {% for acct in retirement_c1 %}
+                    <div class="grid gap-3 sm:grid-cols-2 items-end">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                {{ acct.display_name }}
+                                {% if acct.account_number_last4 %}<span class="text-xs text-gray-400">****{{ acct.account_number_last4 }}</span>{% endif %}
+                            </label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400 text-sm">$</span>
+                                <input type="number" name="balance_{{ acct.id }}" step="0.01" min="0"
+                                       data-calc-group="retirement_c1"
+                                       value="{{ previous_balances.get(acct.id, {}).get('balance', '') }}"
+                                       class="w-full pl-7 rounded-lg border-gray-300 shadow-sm text-sm px-3 py-2 border focus:border-blue-500 focus:ring-blue-500 calc-input">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Cash Balance</label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400 text-sm">$</span>
+                                <input type="number" name="cash_balance_{{ acct.id }}" step="0.01" min="0"
+                                       value="{{ previous_balances.get(acct.id, {}).get('cash_balance', '') }}"
+                                       class="w-full pl-7 rounded-lg border-gray-300 shadow-sm text-sm px-3 py-2 border focus:border-blue-500 focus:ring-blue-500">
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="bg-emerald-50 rounded-lg p-3 mt-3 flex justify-between items-center">
+                    <span class="text-xs font-semibold text-emerald-700">{{ client.name_1 }} Retirement Total</span>
+                    <span class="text-lg font-bold text-emerald-700" id="total-retirement-c1">$0</span>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if retirement_c2 %}
+            <div class="mb-6">
+                <h3 class="text-xs font-semibold text-emerald-600 uppercase tracking-wide mb-3">{{ client.name_2 }} — Retirement</h3>
+                <div class="space-y-3">
+                    {% for acct in retirement_c2 %}
+                    <div class="grid gap-3 sm:grid-cols-2 items-end">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                {{ acct.display_name }}
+                                {% if acct.account_number_last4 %}<span class="text-xs text-gray-400">****{{ acct.account_number_last4 }}</span>{% endif %}
+                            </label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400 text-sm">$</span>
+                                <input type="number" name="balance_{{ acct.id }}" step="0.01" min="0"
+                                       data-calc-group="retirement_c2"
+                                       value="{{ previous_balances.get(acct.id, {}).get('balance', '') }}"
+                                       class="w-full pl-7 rounded-lg border-gray-300 shadow-sm text-sm px-3 py-2 border focus:border-blue-500 focus:ring-blue-500 calc-input">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Cash Balance</label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400 text-sm">$</span>
+                                <input type="number" name="cash_balance_{{ acct.id }}" step="0.01" min="0"
+                                       value="{{ previous_balances.get(acct.id, {}).get('cash_balance', '') }}"
+                                       class="w-full pl-7 rounded-lg border-gray-300 shadow-sm text-sm px-3 py-2 border focus:border-blue-500 focus:ring-blue-500">
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="bg-emerald-50 rounded-lg p-3 mt-3 flex justify-between items-center">
+                    <span class="text-xs font-semibold text-emerald-700">{{ client.name_2 }} Retirement Total</span>
+                    <span class="text-lg font-bold text-emerald-700" id="total-retirement-c2">$0</span>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if non_retirement %}
+            <div class="mb-6">
+                <h3 class="text-xs font-semibold text-blue-600 uppercase tracking-wide mb-3">Non-Retirement Accounts</h3>
+                <div class="space-y-3">
+                    {% for acct in non_retirement %}
+                    <div class="grid gap-3 sm:grid-cols-2 items-end">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                {{ acct.display_name }}
+                                {% if acct.account_number_last4 %}<span class="text-xs text-gray-400">****{{ acct.account_number_last4 }}</span>{% endif %}
+                            </label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400 text-sm">$</span>
+                                <input type="number" name="balance_{{ acct.id }}" step="0.01" min="0"
+                                       data-calc-group="non_retirement"
+                                       value="{{ previous_balances.get(acct.id, {}).get('balance', '') }}"
+                                       class="w-full pl-7 rounded-lg border-gray-300 shadow-sm text-sm px-3 py-2 border focus:border-blue-500 focus:ring-blue-500 calc-input">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Cash Balance</label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400 text-sm">$</span>
+                                <input type="number" name="cash_balance_{{ acct.id }}" step="0.01" min="0"
+                                       value="{{ previous_balances.get(acct.id, {}).get('cash_balance', '') }}"
+                                       class="w-full pl-7 rounded-lg border-gray-300 shadow-sm text-sm px-3 py-2 border focus:border-blue-500 focus:ring-blue-500">
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="bg-blue-50 rounded-lg p-3 mt-3 flex justify-between items-center">
+                    <span class="text-xs font-semibold text-blue-700">Non-Retirement Total</span>
+                    <span class="text-lg font-bold text-blue-700" id="total-non-retirement">$0</span>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if trusts %}
+            <div class="mb-6">
+                <h3 class="text-xs font-semibold text-purple-600 uppercase tracking-wide mb-3">Trust</h3>
+                <div class="space-y-3">
+                    {% for acct in trusts %}
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            {{ acct.display_name }}
+                            {% if acct.property_address %}<span class="text-xs text-gray-400">— {{ acct.property_address }}</span>{% endif %}
+                        </label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400 text-sm">$</span>
+                            <input type="number" name="balance_{{ acct.id }}" step="0.01" min="0"
+                                   data-calc-group="trust"
+                                   value="{{ previous_balances.get(acct.id, {}).get('balance', '') }}"
+                                   placeholder="Zillow Zestimate value"
+                                   class="w-full pl-7 rounded-lg border-gray-300 shadow-sm text-sm px-3 py-2 border focus:border-blue-500 focus:ring-blue-500 calc-input">
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="bg-purple-50 rounded-lg p-3 mt-3 flex justify-between items-center">
+                    <span class="text-xs font-semibold text-purple-700">Trust Total</span>
+                    <span class="text-lg font-bold text-purple-700" id="total-trust">$0</span>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if liabilities %}
+            <div class="mb-6">
+                <h3 class="text-xs font-semibold text-red-600 uppercase tracking-wide mb-3">Liabilities</h3>
+                <div class="space-y-3">
+                    {% for acct in liabilities %}
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            {{ acct.display_name }}
+                            {% if acct.interest_rate %}
+                            <span class="text-xs text-gray-400">@ {{ acct.interest_rate }}%</span>
+                            {% endif %}
+                        </label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400 text-sm">$</span>
+                            <input type="number" name="balance_{{ acct.id }}" step="0.01" min="0"
+                                   data-calc-group="liability"
+                                   value="{{ previous_balances.get(acct.id, {}).get('balance', '') }}"
+                                   class="w-full pl-7 rounded-lg border-gray-300 shadow-sm text-sm px-3 py-2 border focus:border-blue-500 focus:ring-blue-500 calc-input">
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="bg-red-50 rounded-lg p-3 mt-3 flex justify-between items-center">
+                    <span class="text-xs font-semibold text-red-700">Liabilities Total (separate — not subtracted)</span>
+                    <span class="text-lg font-bold text-red-600" id="total-liabilities">$0</span>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Grand total -->
+            <div class="bg-gray-900 rounded-lg p-4 flex justify-between items-center">
+                <span class="text-sm font-semibold text-gray-300 uppercase tracking-wide">Grand Total Net Worth</span>
+                <span class="text-2xl font-bold text-white" id="grand-total">$0</span>
+            </div>
+        </div>
+
+        <!-- Notes -->
+        <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Notes (optional)</label>
+            <textarea name="notes" rows="3" placeholder="Any notes about this quarter..."
+                      class="w-full rounded-lg border-gray-300 shadow-sm text-sm px-3 py-2 border focus:border-blue-500 focus:ring-blue-500"></textarea>
+        </div>
+
+        <!-- Submit -->
+        <div class="flex items-center justify-between">
+            <a href="{{ url_for('client_detail', client_id=client.id) }}" class="text-sm text-gray-500 hover:text-gray-700">Cancel</a>
+            <button type="submit"
+                    class="bg-brand-500 hover:bg-brand-600 text-white px-8 py-3 rounded-lg text-sm font-semibold shadow transition">
+                Generate Report
+            </button>
+        </div>
+    </form>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const inputs = document.querySelectorAll('.calc-input');
+    inputs.forEach(input => {
+        input.addEventListener('input', recalculate);
+    });
+    recalculate();
+});
+
+function sumGroup(group) {
+    let total = 0;
+    document.querySelectorAll(`[data-calc-group="${group}"]`).forEach(el => {
+        total += parseFloat(el.value) || 0;
+    });
+    return total;
+}
+
+function fmt(val) {
+    return '$' + val.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+}
+
+function recalculate() {
+    const rc1 = sumGroup('retirement_c1');
+    const rc2 = sumGroup('retirement_c2');
+    const nr = sumGroup('non_retirement');
+    const trust = sumGroup('trust');
+    const liab = sumGroup('liability');
+    const grand = rc1 + rc2 + nr + trust;
+
+    const el = (id) => document.getElementById(id);
+    if (el('total-retirement-c1')) el('total-retirement-c1').textContent = fmt(rc1);
+    if (el('total-retirement-c2')) el('total-retirement-c2').textContent = fmt(rc2);
+    if (el('total-non-retirement')) el('total-non-retirement').textContent = fmt(nr);
+    if (el('total-trust')) el('total-trust').textContent = fmt(trust);
+    if (el('total-liabilities')) el('total-liabilities').textContent = fmt(liab);
+    if (el('grand-total')) el('grand-total').textContent = fmt(grand);
+}
+</script>
+{% endblock %}

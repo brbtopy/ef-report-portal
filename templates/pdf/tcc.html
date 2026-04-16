@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+    @page {
+        size: letter landscape;
+        margin: 0.4in;
+    }
+    body {
+        font-family: Helvetica, Arial, sans-serif;
+        color: #1e293b;
+        font-size: 10px;
+    }
+
+    .header-bar {
+        background-color: #1e3a8a;
+        color: white;
+        padding: 16px 24px;
+        margin: -0.4in -0.4in 0 -0.4in;
+    }
+    .header-title { font-size: 20px; font-weight: bold; }
+    .header-sub { font-size: 10px; color: #93c5fd; margin-top: 2px; }
+    .header-right { text-align: right; font-size: 11px; }
+    .header-client { font-size: 15px; font-weight: bold; }
+
+    /* Client info pills */
+    .client-pills { margin-top: 14px; text-align: center; }
+    .pill {
+        display: inline-block;
+        background-color: #f0fdf4;
+        border: 2px solid #86efac;
+        border-radius: 20px;
+        padding: 6px 18px;
+        margin: 0 6px;
+    }
+    .pill-name { font-weight: bold; font-size: 12px; color: #166534; }
+    .pill-detail { font-size: 9px; color: #15803d; }
+
+    /* Layout */
+    .main-table { width: 100%; margin-top: 10px; border-spacing: 8px; }
+    .main-table td { vertical-align: top; }
+
+    .section-label {
+        font-size: 9px;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        padding-bottom: 4px;
+        margin-bottom: 6px;
+        border-bottom: 2px solid;
+    }
+    .label-green { color: #16a34a; border-color: #86efac; }
+    .label-blue { color: #2563eb; border-color: #93c5fd; }
+    .label-purple { color: #7c3aed; border-color: #c4b5fd; }
+    .label-red { color: #dc2626; border-color: #fca5a5; }
+
+    /* Account bubbles */
+    .acct-bubble {
+        border-radius: 8px;
+        padding: 6px 10px;
+        margin-bottom: 4px;
+    }
+    .acct-green { background-color: #f0fdf4; border: 1px solid #86efac; }
+    .acct-blue { background-color: #eff6ff; border: 1px solid #93c5fd; }
+    .acct-purple { background-color: #f5f3ff; border: 1px solid #c4b5fd; }
+    .acct-red { background-color: #fef2f2; border: 1px solid #fca5a5; }
+
+    .acct-type { font-weight: bold; font-size: 10px; }
+    .acct-green .acct-type { color: #166534; }
+    .acct-blue .acct-type { color: #1e40af; }
+    .acct-purple .acct-type { color: #5b21b6; }
+    .acct-red .acct-type { color: #991b1b; }
+
+    .acct-num { font-size: 8px; color: #94a3b8; }
+    .acct-bal { font-size: 13px; font-weight: bold; margin-top: 2px; }
+    .acct-green .acct-bal { color: #166534; }
+    .acct-blue .acct-bal { color: #1e40af; }
+    .acct-purple .acct-bal { color: #5b21b6; }
+    .acct-red .acct-bal { color: #991b1b; }
+    .acct-cash { font-size: 8px; color: #64748b; }
+
+    /* Totals */
+    .section-total {
+        border-radius: 6px;
+        padding: 5px 10px;
+        margin-top: 6px;
+        font-weight: bold;
+        font-size: 11px;
+    }
+    .total-green { background-color: #dcfce7; color: #166534; }
+    .total-blue { background-color: #dbeafe; color: #1e40af; }
+    .total-purple { background-color: #ede9fe; color: #5b21b6; }
+    .total-red { background-color: #fee2e2; color: #991b1b; }
+
+    /* Trust circle */
+    .trust-circle {
+        width: 130px;
+        height: 130px;
+        border-radius: 65px;
+        background-color: #f5f3ff;
+        border: 3px solid #a78bfa;
+        text-align: center;
+        padding-top: 35px;
+        margin: 0 auto;
+    }
+    .trust-label { font-size: 9px; font-weight: bold; color: #7c3aed; text-transform: uppercase; }
+    .trust-amount { font-size: 17px; font-weight: bold; color: #5b21b6; margin-top: 2px; }
+    .trust-addr { font-size: 7px; color: #7c3aed; margin-top: 2px; }
+
+    /* Grand total */
+    .grand-total {
+        background-color: #0f172a;
+        border-radius: 10px;
+        padding: 12px 24px;
+        margin-top: 8px;
+        color: white;
+    }
+    .gt-label { font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; color: #94a3b8; }
+    .gt-value { font-size: 26px; font-weight: bold; text-align: right; }
+
+    .empty-note { font-size: 9px; color: #94a3b8; padding: 8px 0; font-style: italic; }
+
+    .footer-bar {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        padding: 8px 28px;
+        font-size: 8px;
+        color: #94a3b8;
+        text-align: center;
+        border-top: 1px solid #e2e8f0;
+    }
+</style>
+</head>
+<body>
+
+<div>
+    <table class="header-bar" width="100%" cellpadding="0" cellspacing="0">
+        <tr>
+            <td>
+                <div class="header-title">Total Client Chart</div>
+                <div class="header-sub">TCC — Net Worth Overview</div>
+            </td>
+            <td class="header-right">
+                <div class="header-client">{{ client.name_1 }}{% if client.is_married and client.name_2 %} &amp; {{ client.name_2 }}{% endif %}</div>
+                <div>{{ report.report_date.strftime('%B %d, %Y') }} &middot; {{ report.label }}</div>
+            </td>
+        </tr>
+    </table>
+
+    <!-- Client pills -->
+    <div class="client-pills">
+        <span class="pill">
+            <span class="pill-name">{{ client.name_1 }}</span><br>
+            <span class="pill-detail">
+                {% if client.age_1 %}Age {{ client.age_1 }}{% endif %}
+                {% if client.dob_1 %} &middot; {{ client.dob_1.strftime('%m/%d/%Y') }}{% endif %}
+                {% if client.ssn_last4_1 %} &middot; ***-**-{{ client.ssn_last4_1 }}{% endif %}
+            </span>
+        </span>
+        {% if client.is_married and client.name_2 %}
+        <span class="pill">
+            <span class="pill-name">{{ client.name_2 }}</span><br>
+            <span class="pill-detail">
+                {% if client.age_2 %}Age {{ client.age_2 }}{% endif %}
+                {% if client.dob_2 %} &middot; {{ client.dob_2.strftime('%m/%d/%Y') }}{% endif %}
+                {% if client.ssn_last4_2 %} &middot; ***-**-{{ client.ssn_last4_2 }}{% endif %}
+            </span>
+        </span>
+        {% endif %}
+    </div>
+
+    <!-- Main grid: 3 columns -->
+    <table class="main-table" cellpadding="0" cellspacing="8">
+        <tr>
+            <!-- Column 1: Client 1 Retirement + Non-Retirement -->
+            <td width="38%">
+                <!-- Client 1 Retirement -->
+                <div class="section-label label-green">{{ client.name_1 }} — Retirement</div>
+                {% for acct in retirement_c1 %}
+                {% set bal = report.balance_for_account(acct.id) %}
+                <div class="acct-bubble acct-green">
+                    <div class="acct-type">{{ acct.account_type }}</div>
+                    {% if acct.account_number_last4 %}<div class="acct-num">****{{ acct.account_number_last4 }}</div>{% endif %}
+                    <div class="acct-bal">{{ (bal.balance if bal else 0)|currency }}</div>
+                    {% if bal and bal.cash_balance %}<div class="acct-cash">Cash: {{ bal.cash_balance|currency }}</div>{% endif %}
+                </div>
+                {% endfor %}
+                {% if not retirement_c1 %}<div class="empty-note">No retirement accounts</div>{% endif %}
+                <table class="section-total total-green" width="100%" cellpadding="0" cellspacing="0">
+                    <tr>
+                        <td>Total</td>
+                        <td style="text-align: right;">{{ report.total_retirement(client, 'client_1')|currency }}</td>
+                    </tr>
+                </table>
+
+                <br>
+
+                <!-- Non-Retirement -->
+                <div class="section-label label-blue">Non-Retirement Accounts</div>
+                {% for acct in non_retirement %}
+                {% set bal = report.balance_for_account(acct.id) %}
+                <div class="acct-bubble acct-blue">
+                    <div class="acct-type">{{ acct.account_type }}</div>
+                    {% if acct.account_number_last4 %}<div class="acct-num">****{{ acct.account_number_last4 }}</div>{% endif %}
+                    <div class="acct-bal">{{ (bal.balance if bal else 0)|currency }}</div>
+                    {% if bal and bal.cash_balance %}<div class="acct-cash">Cash: {{ bal.cash_balance|currency }}</div>{% endif %}
+                </div>
+                {% endfor %}
+                {% if not non_retirement %}<div class="empty-note">No non-retirement accounts</div>{% endif %}
+                <table class="section-total total-blue" width="100%" cellpadding="0" cellspacing="0">
+                    <tr>
+                        <td>Total</td>
+                        <td style="text-align: right;">{{ report.total_non_retirement(client)|currency }}</td>
+                    </tr>
+                </table>
+            </td>
+
+            <!-- Column 2: Trust (center) -->
+            <td width="24%" style="text-align: center; vertical-align: middle;">
+                <div class="section-label label-purple" style="text-align: center;">Trust</div>
+                {% for acct in trust_accounts %}
+                {% set bal = report.balance_for_account(acct.id) %}
+                <div class="trust-circle">
+                    <div class="trust-label">{{ acct.account_type }}</div>
+                    <div class="trust-amount">{{ (bal.balance if bal else 0)|currency }}</div>
+                    {% if acct.property_address %}<div class="trust-addr">{{ acct.property_address }}</div>{% endif %}
+                </div>
+                {% endfor %}
+                {% if not trust_accounts %}
+                <div class="trust-circle">
+                    <div class="trust-label">Trust</div>
+                    <div class="trust-amount">$0</div>
+                </div>
+                {% endif %}
+                <table class="section-total total-purple" width="100%" cellpadding="0" cellspacing="0">
+                    <tr>
+                        <td>Total</td>
+                        <td style="text-align: right;">{{ report.total_trust(client)|currency }}</td>
+                    </tr>
+                </table>
+            </td>
+
+            <!-- Column 3: Client 2 Retirement + Liabilities -->
+            <td width="38%">
+                {% if client.is_married and client.name_2 %}
+                <!-- Client 2 Retirement -->
+                <div class="section-label label-green">{{ client.name_2 }} — Retirement</div>
+                {% for acct in retirement_c2 %}
+                {% set bal = report.balance_for_account(acct.id) %}
+                <div class="acct-bubble acct-green">
+                    <div class="acct-type">{{ acct.account_type }}</div>
+                    {% if acct.account_number_last4 %}<div class="acct-num">****{{ acct.account_number_last4 }}</div>{% endif %}
+                    <div class="acct-bal">{{ (bal.balance if bal else 0)|currency }}</div>
+                    {% if bal and bal.cash_balance %}<div class="acct-cash">Cash: {{ bal.cash_balance|currency }}</div>{% endif %}
+                </div>
+                {% endfor %}
+                {% if not retirement_c2 %}<div class="empty-note">No retirement accounts</div>{% endif %}
+                <table class="section-total total-green" width="100%" cellpadding="0" cellspacing="0">
+                    <tr>
+                        <td>Total</td>
+                        <td style="text-align: right;">{{ report.total_retirement(client, 'client_2')|currency }}</td>
+                    </tr>
+                </table>
+                {% else %}
+                <div class="section-label label-green">Portfolio Info</div>
+                <div class="empty-note">Single-client portfolio. All retirement accounts shown on the left.</div>
+                {% endif %}
+
+                <br>
+
+                <!-- Liabilities -->
+                <div class="section-label label-red">Liabilities (Not Subtracted)</div>
+                {% for acct in liabilities %}
+                {% set bal = report.balance_for_account(acct.id) %}
+                <div class="acct-bubble acct-red">
+                    <div class="acct-type">{{ acct.account_type }}</div>
+                    {% if acct.interest_rate %}<div class="acct-num">{{ acct.interest_rate }}% interest</div>{% endif %}
+                    <div class="acct-bal">{{ (bal.balance if bal else 0)|currency }}</div>
+                </div>
+                {% endfor %}
+                {% if not liabilities %}<div class="empty-note">No liabilities</div>{% endif %}
+                <table class="section-total total-red" width="100%" cellpadding="0" cellspacing="0">
+                    <tr>
+                        <td>Total</td>
+                        <td style="text-align: right;">{{ report.total_liabilities(client)|currency }}</td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+
+    <!-- Grand total -->
+    <table class="grand-total" width="100%" cellpadding="0" cellspacing="0">
+        <tr>
+            <td class="gt-label">Grand Total Net Worth</td>
+            <td class="gt-value">{{ report.grand_total(client)|currency }}</td>
+        </tr>
+    </table>
+</div>
+
+</body>
+</html>

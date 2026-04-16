@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+    @page {
+        size: letter landscape;
+        margin: 0.4in;
+    }
+    body {
+        font-family: Helvetica, Arial, sans-serif;
+        color: #1e293b;
+        font-size: 11px;
+    }
+
+    .header-bar {
+        background-color: #1e3a8a;
+        color: white;
+        padding: 18px 28px;
+        margin: -0.4in -0.4in 0 -0.4in;
+    }
+    .header-title { font-size: 20px; font-weight: bold; }
+    .header-sub { font-size: 10px; color: #93c5fd; margin-top: 3px; }
+    .header-right { text-align: right; font-size: 11px; }
+    .header-client { font-size: 15px; font-weight: bold; }
+
+    .diagram-table { width: 100%; margin-top: 60px; }
+    .diagram-table td { vertical-align: middle; text-align: center; }
+
+    .bubble {
+        width: 200px;
+        height: 200px;
+        border-radius: 100px;
+        text-align: center;
+        margin: 0 auto;
+        padding-top: 60px;
+    }
+    .bubble-inflow {
+        background-color: #dcfce7;
+        border: 3px solid #22c55e;
+    }
+    .bubble-outflow {
+        background-color: #fee2e2;
+        border: 3px solid #ef4444;
+    }
+    .bubble-pr {
+        background-color: #dbeafe;
+        border: 3px solid #3b82f6;
+        width: 220px;
+        height: 220px;
+        border-radius: 110px;
+        padding-top: 65px;
+    }
+
+    .bubble-label { font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
+    .bubble-inflow .bubble-label { color: #15803d; }
+    .bubble-outflow .bubble-label { color: #dc2626; }
+    .bubble-pr .bubble-label { color: #2563eb; }
+
+    .bubble-amount { font-size: 26px; font-weight: bold; margin-top: 6px; }
+    .bubble-inflow .bubble-amount { color: #166534; }
+    .bubble-outflow .bubble-amount { color: #991b1b; }
+    .bubble-pr .bubble-amount { color: #1e40af; }
+
+    .bubble-sub { font-size: 9px; color: #64748b; margin-top: 4px; }
+
+    .arrow-cell { width: 100px; text-align: center; }
+    .arrow-line { font-size: 28px; font-weight: bold; letter-spacing: -2px; }
+    .arrow-green { color: #22c55e; }
+    .arrow-red { color: #ef4444; }
+    .arrow-blue { color: #3b82f6; }
+    .arrow-label { font-size: 9px; font-weight: bold; margin-top: 2px; }
+
+    .footer-bar {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        padding: 8px 28px;
+        font-size: 8px;
+        color: #94a3b8;
+        text-align: center;
+        border-top: 1px solid #e2e8f0;
+    }
+
+    /* Page 2 styles */
+    .page-break { page-break-before: always; }
+    .detail-table { width: 100%; margin-top: 30px; border-spacing: 16px; }
+    .detail-card {
+        padding: 24px;
+        border-radius: 12px;
+        text-align: center;
+        width: 33%;
+    }
+    .card-blue { background-color: #eff6ff; border: 2px solid #bfdbfe; }
+    .card-green { background-color: #f0fdf4; border: 2px solid #bbf7d0; }
+    .card-gray { background-color: #f8fafc; border: 2px solid #e2e8f0; }
+
+    .card-label { font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
+    .card-blue .card-label { color: #2563eb; }
+    .card-green .card-label { color: #16a34a; }
+    .card-gray .card-label { color: #64748b; }
+
+    .card-value { font-size: 32px; font-weight: bold; margin-top: 8px; }
+    .card-blue .card-value { color: #1e40af; }
+    .card-green .card-value { color: #166534; }
+    .card-gray .card-value { color: #334155; }
+
+    .card-sub { font-size: 9px; color: #94a3b8; margin-top: 6px; }
+
+    .target-box {
+        background-color: #f1f5f9;
+        border-radius: 10px;
+        padding: 16px 24px;
+        margin-top: 30px;
+    }
+    .target-label { font-size: 12px; color: #64748b; font-weight: bold; }
+    .target-value { font-size: 22px; font-weight: bold; color: #1e40af; }
+
+    .progress-track {
+        background-color: #e2e8f0;
+        height: 12px;
+        border-radius: 6px;
+        margin-top: 10px;
+        width: 100%;
+    }
+    .progress-fill {
+        background-color: #3b82f6;
+        height: 12px;
+        border-radius: 6px;
+    }
+    .progress-text { font-size: 10px; color: #64748b; margin-top: 6px; text-align: center; }
+</style>
+</head>
+<body>
+
+<!-- PAGE 1 -->
+<div>
+    <table class="header-bar" width="100%" cellpadding="0" cellspacing="0">
+        <tr>
+            <td>
+                <div class="header-title">Simple Automated Cash Flow System</div>
+                <div class="header-sub">SACS — Monthly Cash Flow Overview</div>
+            </td>
+            <td class="header-right">
+                <div class="header-client">{{ client.name_1 }}{% if client.is_married and client.name_2 %} &amp; {{ client.name_2 }}{% endif %}</div>
+                <div>{{ report.report_date.strftime('%B %d, %Y') }} &middot; {{ report.label }}</div>
+            </td>
+        </tr>
+    </table>
+
+    <table class="diagram-table" cellpadding="0" cellspacing="0">
+        <tr>
+            <td>
+                <div class="bubble bubble-inflow">
+                    <div class="bubble-label">Inflow</div>
+                    <div class="bubble-amount">{{ client.monthly_salary|currency }}</div>
+                    <div class="bubble-sub">Monthly Take-Home</div>
+                </div>
+            </td>
+            <td class="arrow-cell">
+                <div class="arrow-line arrow-green">———&gt;</div>
+                <div class="arrow-label arrow-green">Checking Account</div>
+            </td>
+            <td>
+                <div class="bubble bubble-outflow">
+                    <div class="bubble-label">Outflow</div>
+                    <div class="bubble-amount">{{ client.monthly_expense_budget|currency }}</div>
+                    <div class="bubble-sub">Expense Budget</div>
+                </div>
+            </td>
+            <td class="arrow-cell">
+                <div class="arrow-line arrow-blue">———&gt;</div>
+                <div class="arrow-label arrow-blue">Excess {{ client.excess_cashflow|currency }}/mo</div>
+            </td>
+            <td>
+                <div class="bubble bubble-pr">
+                    <div class="bubble-label">Private Reserve</div>
+                    <div class="bubble-amount">{{ report.private_reserve_balance|currency }}</div>
+                    <div class="bubble-sub">High-Yield Savings</div>
+                </div>
+            </td>
+        </tr>
+    </table>
+</div>
+
+<!-- PAGE 2 -->
+<div class="page-break">
+    <table class="header-bar" width="100%" cellpadding="0" cellspacing="0">
+        <tr>
+            <td>
+                <div class="header-title">Private Reserve &amp; Investment Summary</div>
+                <div class="header-sub">SACS — Page 2</div>
+            </td>
+            <td class="header-right">
+                <div class="header-client">{{ client.name_1 }}{% if client.is_married and client.name_2 %} &amp; {{ client.name_2 }}{% endif %}</div>
+                <div>{{ report.report_date.strftime('%B %d, %Y') }} &middot; {{ report.label }}</div>
+            </td>
+        </tr>
+    </table>
+
+    <table class="detail-table" cellpadding="0" cellspacing="16">
+        <tr>
+            <td class="detail-card card-blue">
+                <div class="card-label">Private Reserve</div>
+                <div class="card-value">{{ report.private_reserve_balance|currency }}</div>
+                <div class="card-sub">High-Yield Savings Account</div>
+            </td>
+            <td class="detail-card card-green">
+                <div class="card-label">Schwab Investment</div>
+                <div class="card-value">{{ report.schwab_balance|currency }}</div>
+                <div class="card-sub">Investment Account Balance</div>
+            </td>
+            <td class="detail-card card-gray">
+                <div class="card-label">Monthly Excess</div>
+                <div class="card-value">{{ client.excess_cashflow|currency }}</div>
+                <div class="card-sub">Transferred monthly to PR</div>
+            </td>
+        </tr>
+    </table>
+
+    <div class="target-box">
+        <table width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+                <td class="target-label">Private Reserve Target</td>
+                <td class="target-value" style="text-align: right;">{{ client.private_reserve_target|currency }}</td>
+            </tr>
+        </table>
+        {% set pct = ((report.private_reserve_balance / client.private_reserve_target * 100) if client.private_reserve_target else 0) %}
+        <div class="progress-track">
+            <div class="progress-fill" style="width: {{ [pct, 100]|min }}%;"></div>
+        </div>
+        <div class="progress-text">
+            6 &times; Monthly Expenses ({{ client.monthly_expense_budget|currency }})
+            + Insurance Deductibles ({{ (client.insurance_deductibles or 0)|currency }})
+            = {{ client.private_reserve_target|currency }}
+            — Currently at {{ "%.0f"|format(pct) }}%
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

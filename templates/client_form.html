@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit' if editing else 'New' }} Client — EF Report Portal{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <div class="mb-6">
+        <a href="{{ url_for('dashboard') }}" class="text-sm text-gray-500 hover:text-brand-500 transition">&larr; Back to dashboard</a>
+        <h1 class="text-2xl font-bold text-gray-900 mt-2">{{ 'Edit' if editing else 'New' }} Client</h1>
+    </div>
+
+    <form method="POST"
+          action="{{ url_for('update_client', client_id=client.id) if editing else url_for('create_client') }}"
+          class="bg-white rounded-xl border border-gray-200 shadow-sm divide-y divide-gray-100">
+
+        <!-- Primary client -->
+        <div class="p-6">
+            <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">Primary Client</h2>
+            <div class="grid gap-4 sm:grid-cols-2">
+                <div class="sm:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Full Name *</label>
+                    <input type="text" name="name_1" required
+                           value="{{ client.name_1 if client else '' }}"
+                           class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm px-3 py-2 border">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label>
+                    <input type="date" name="dob_1"
+                           value="{{ client.dob_1.isoformat() if client and client.dob_1 else '' }}"
+                           class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm px-3 py-2 border">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">SSN (last 4)</label>
+                    <input type="text" name="ssn_last4_1" maxlength="4" pattern="\d{4}"
+                           value="{{ client.ssn_last4_1 if client and client.ssn_last4_1 else '' }}"
+                           placeholder="0000"
+                           class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm px-3 py-2 border">
+                </div>
+            </div>
+        </div>
+
+        <!-- Spouse toggle -->
+        <div class="p-6">
+            <label class="flex items-center gap-3 cursor-pointer">
+                <input type="checkbox" name="is_married" id="is_married"
+                       {{ 'checked' if client and client.is_married }}
+                       onchange="document.getElementById('spouse-section').classList.toggle('hidden', !this.checked)"
+                       class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                <span class="text-sm font-medium text-gray-700">Married / Has Spouse</span>
+            </label>
+
+            <div id="spouse-section" class="{{ '' if client and client.is_married else 'hidden' }} mt-4">
+                <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">Spouse</h2>
+                <div class="grid gap-4 sm:grid-cols-2">
+                    <div class="sm:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Spouse Full Name</label>
+                        <input type="text" name="name_2"
+                               value="{{ client.name_2 if client and client.name_2 else '' }}"
+                               class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm px-3 py-2 border">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label>
+                        <input type="date" name="dob_2"
+                               value="{{ client.dob_2.isoformat() if client and client.dob_2 else '' }}"
+                               class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm px-3 py-2 border">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">SSN (last 4)</label>
+                        <input type="text" name="ssn_last4_2" maxlength="4" pattern="\d{4}"
+                               value="{{ client.ssn_last4_2 if client and client.ssn_last4_2 else '' }}"
+                               placeholder="0000"
+                               class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm px-3 py-2 border">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Financial info -->
+        <div class="p-6">
+            <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">Financial Details</h2>
+            <div class="grid gap-4 sm:grid-cols-2">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Monthly Salary (after tax)</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400 text-sm">$</span>
+                        <input type="number" name="monthly_salary" step="0.01" min="0"
+                               value="{{ client.monthly_salary if client and client.monthly_salary else '' }}"
+                               class="w-full pl-7 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm px-3 py-2 border">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Monthly Expense Budget</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400 text-sm">$</span>
+                        <input type="number" name="monthly_expense_budget" step="0.01" min="0"
+                               value="{{ client.monthly_expense_budget if client and client.monthly_expense_budget else '' }}"
+                               class="w-full pl-7 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm px-3 py-2 border">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Insurance Deductibles (total)</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400 text-sm">$</span>
+                        <input type="number" name="insurance_deductibles" step="0.01" min="0"
+                               value="{{ client.insurance_deductibles if client and client.insurance_deductibles else '' }}"
+                               class="w-full pl-7 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm px-3 py-2 border">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Floor Balance</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400 text-sm">$</span>
+                        <input type="number" name="floor_balance" step="0.01" min="0"
+                               value="{{ client.floor_balance if client else 1000 }}"
+                               class="w-full pl-7 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm px-3 py-2 border">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="p-6 bg-gray-50 rounded-b-xl flex items-center justify-between">
+            <a href="{{ url_for('dashboard') }}" class="text-sm text-gray-500 hover:text-gray-700 transition">Cancel</a>
+            <button type="submit"
+                    class="bg-brand-500 hover:bg-brand-600 text-white px-6 py-2.5 rounded-lg text-sm font-semibold shadow transition">
+                {{ 'Save Changes' if editing else 'Create Client' }}
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
